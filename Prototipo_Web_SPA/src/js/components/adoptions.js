@@ -269,7 +269,7 @@ function openPetDetailModal(pet) {
 }
 
 /**
- * Formulario para Publicar / Editar Adopción con Selectores Tipo Píldora
+ * Formulario para Publicar / Editar Adopción con Selectores Tipo Píldora e Input de Imagen Real
  */
 export function renderAdoptionForm(containerId = 'view-publicar-adopcion') {
   const container = document.getElementById(containerId);
@@ -278,6 +278,8 @@ export function renderAdoptionForm(containerId = 'view-publicar-adopcion') {
   let selectedAge = 'Cachorro'; // Cachorro | Adulto | Anciano
   let selectedGender = 'Hembra'; // Hembra | Macho
   let selectedType = 'Perro'; // Perro | Gato
+  
+  // Arreglo dinámico para guardar las imágenes subidas en Base64
   let attachedPhotos = [
     'https://images.unsplash.com/photo-1597633425046-08f5110420b5?auto=format&fit=crop&w=600&q=80'
   ];
@@ -303,8 +305,28 @@ export function renderAdoptionForm(containerId = 'view-publicar-adopcion') {
               <input type="text" id="adop-name" placeholder="Ej. Toby" required class="w-full px-4 py-3 rounded-xl border border-gray-300 text-sm focus-visible:ring-2 focus-visible:ring-[#E0A800]" />
             </div>
 
-            <!-- SELECTORES TIPO PÍLDORA (CHIPS) CON LOS 5 ESTADOS -->
-            
+            <!-- SECCIÓN: CARGA DE IMAGEN DEL ANIMAL -->
+            <div class="space-y-2">
+              <label for="adop-image-file" class="block text-xs font-bold text-[#4A4A4A]">Fotografía de la Mascota *</label>
+              <div class="flex items-center gap-4">
+                <input type="file" id="adop-image-file" accept="image/*" class="block w-full text-xs text-gray-500
+                  file:mr-4 file:py-2.5 file:px-4
+                  file:rounded-full file:border-0
+                  file:text-xs file:font-bold
+                  file:bg-[#E0A800] file:text-black
+                  hover:file:bg-[#c99700] cursor-pointer" />
+              </div>
+              <!-- Previsualización de la foto seleccionada -->
+              <div id="image-preview-wrapper" class="mt-2 flex gap-2 flex-wrap">
+                ${attachedPhotos.map((imgSrc, idx) => `
+                  <div class="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-300 shadow-sm">
+                    <img src="${imgSrc}" alt="Preview" class="w-full h-full object-cover" />
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <!-- SELECTORES TIPO PÍLDORA (CHIPS) -->
             <!-- 1. Especie -->
             <div class="space-y-1.5">
               <label class="block text-xs font-bold text-[#4A4A4A]">Especie *</label>
@@ -383,7 +405,33 @@ export function renderAdoptionForm(containerId = 'view-publicar-adopcion') {
       btn.onclick = () => { selectedAge = btn.getAttribute('data-chip-age'); renderForm(); };
     });
 
-    // Submit
+    // Listener para capturar la imagen seleccionada y convertirla a Base64
+    const fileInput = container.querySelector('#adop-image-file');
+    if (fileInput) {
+      fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function(event) {
+            // Guardamos la imagen convertida en Base64
+            attachedPhotos = [event.target.result];
+            
+            // Actualizamos la previsualización visual en pantalla
+            const previewWrapper = container.querySelector('#image-preview-wrapper');
+            if (previewWrapper) {
+              previewWrapper.innerHTML = `
+                <div class="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-300 shadow-sm">
+                  <img src="${event.target.result}" alt="Preview" class="w-full h-full object-cover" />
+                </div>
+              `;
+            }
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+
+    // Submit del Formulario
     document.getElementById('form-new-adoption').onsubmit = (e) => {
       e.preventDefault();
       const name = document.getElementById('adop-name').value.trim();
@@ -405,7 +453,7 @@ export function renderAdoptionForm(containerId = 'view-publicar-adopcion') {
         size: 'Mediano',
         health: ['Vacunado/a', 'Castrado/a'],
         story,
-        images: attachedPhotos
+        images: attachedPhotos // Aquí viaja la foto subida en Base64
       });
 
       window.location.hash = '#/adopciones';
