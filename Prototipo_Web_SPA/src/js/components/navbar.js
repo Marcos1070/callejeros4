@@ -5,6 +5,11 @@
 
 import { Store } from '../store.js';
 
+// La suscripción al Store se registra UNA sola vez (si se hiciera en cada render,
+// cada notificación agregaría un listener nuevo y entraría en un bucle infinito).
+let navbarSubscribed = false;
+let currentHashListener = null;
+
 export function renderNavbar(containerId = 'navbar-container') {
   const container = document.getElementById(containerId);
   if (!container) return;
@@ -161,8 +166,14 @@ export function renderNavbar(containerId = 'navbar-container') {
     });
   };
 
+  // Evita acumular listeners de hashchange en cada re-render
+  if (currentHashListener) window.removeEventListener('hashchange', currentHashListener);
+  currentHashListener = highlightActive;
   window.addEventListener('hashchange', highlightActive);
   highlightActive();
 
-  Store.subscribe('user:updated', () => renderNavbar(containerId));
+  if (!navbarSubscribed) {
+    navbarSubscribed = true;
+    Store.subscribe('user:updated', () => renderNavbar(containerId));
+  }
 }

@@ -19,10 +19,11 @@ export function renderProfile(containerId = 'view-perfil') {
       <!-- Cabecera de Perfil -->
       <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-200 flex flex-col sm:flex-row items-center gap-6">
         <div class="relative">
-          <img src="${user.avatar}" alt="${user.name}" class="w-24 h-24 rounded-full object-cover border-4 border-[#E0A800] shadow-md" />
-          <button type="button" class="absolute bottom-0 right-0 p-2 bg-[#E0A800] text-black rounded-full hover:bg-amber-500 shadow" title="Cambiar foto de perfil">
+          <img id="profile-avatar-img" src="${user.avatar}" alt="${user.name}" class="w-24 h-24 rounded-full object-cover border-4 border-[#E0A800] shadow-md" />
+          <button id="btn-change-avatar" type="button" class="absolute bottom-0 right-0 p-2 bg-[#E0A800] text-black rounded-full hover:bg-amber-500 shadow" title="Cambiar foto de perfil" aria-label="Cambiar foto de perfil">
             📷
           </button>
+          <input type="file" id="avatar-file-input" accept="image/*" class="hidden" />
         </div>
         <div class="text-center sm:text-left space-y-1">
           <div class="flex items-center justify-center sm:justify-start gap-2">
@@ -227,6 +228,51 @@ export function renderProfile(containerId = 'view-perfil') {
   document.getElementById('btn-logout').addEventListener('click', () => {
     Store.logout();
     window.location.hash = '#/';
+  });
+
+  // Cambio de foto de perfil
+  const avatarInput = document.getElementById('avatar-file-input');
+
+  document.getElementById('btn-change-avatar').addEventListener('click', () => {
+    avatarInput.click();
+  });
+
+  avatarInput.addEventListener('change', () => {
+    const file = avatarInput.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      Store.notify('toast', { type: 'error', title: 'Archivo inválido', message: 'Elegí un archivo de imagen (JPG, PNG, WEBP).' });
+      avatarInput.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onerror = () => {
+      Store.notify('toast', { type: 'error', title: 'Error', message: 'No se pudo leer la imagen seleccionada.' });
+    };
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => {
+        Store.notify('toast', { type: 'error', title: 'Error', message: 'La imagen está dañada o no es compatible.' });
+      };
+      img.onload = () => {
+        // Recorte cuadrado centrado y reducción a 200x200 para no saturar el localStorage
+        const size = 200;
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        const min = Math.min(img.width, img.height);
+        const sx = (img.width - min) / 2;
+        const sy = (img.height - min) / 2;
+        ctx.drawImage(img, sx, sy, min, min, 0, 0, size, size);
+        Store.updateAvatar(canvas.toDataURL('image/jpeg', 0.8));
+        renderProfile(containerId);
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
   });
 
   document.getElementById('form-edit-profile').addEventListener('submit', (e) => {

@@ -171,6 +171,20 @@ class ReactiveStore {
     });
   }
 
+  updateAvatar(avatarDataUrl) {
+    this.state.user = {
+      ...this.state.user,
+      avatar: avatarDataUrl
+    };
+    StorageManager.set(STORAGE_KEYS.USER, this.state.user);
+    this.notify('user:updated', this.state.user);
+    this.notify('toast', {
+      type: 'success',
+      title: 'Foto Actualizada',
+      message: 'Tu foto de perfil se cambió correctamente.'
+    });
+  }
+
   toggle2FA() {
     this.state.user.twoFactorEnabled = !this.state.user.twoFactorEnabled;
     StorageManager.set(STORAGE_KEYS.USER, this.state.user);
