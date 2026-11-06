@@ -1,0 +1,28 @@
+{
+  "project": "callejeros-rio-cuarto",
+  "name": "Callejeros Río IV",
+  "description": "SPA comunitaria para rescate, mapa interactivo, adopciones y mensajería en Río Cuarto (Córdoba, Argentina)",
+  "operating_system": {
+    "framework": "Gentle-AI",
+    "version": "2.0.0",
+    "last_updated": "2026-11-06T17:44:00-03:00",
+    "design_tokens": {
+      "surface": "#EBEBEB",
+      "primary_amber": "#E0A800",
+      "alert_red": "#C50000",
+      "success_green": "#0C832A",
+      "chat_light_blue": "#98D7FF",
+      "text_primary": "#000000",
+      "text_secondary": "#4A4A4A",
+      "typography": "Inter (Black, Bold, Medium)",
+      "radii": "pill / rounded-full (botones) y 12-16px (tarjetas)"
+    },
+    "modules": [
+      "Autenticación, Registro y Cuentas (Login, Registro con validaciones, Recuperación en 3 pasos, Perfil, Seguridad con 2FA/Biometría/Sesiones, Configuración)",
+      "Mapa Interactivo de Río Cuarto (Leaflet.js, pines semánticos alertas y POIs, tarjetas de info con Abierto/Cerrado, simulación de ruta y modal de llegada)",
+      "Módulo de Reportes y Alertas de Emergencia (Feed con filtros, Reportar sin cuenta, Publicar reporte con fotos y validación de dirección, Perfil del publicador, Mis reportes, Sala de rescate)",
+      "Módulo de Adopciones Responsables (Catálogo con filtros Perros/Gatos, Carrusel modal de fotos, Formulario con chips de edad/sexo/tipo, Mis publicaciones)",
+      "Módulo de Mensajería, Chats y Grupos (Chat 1 a 1, buscador con 'Contacto no encontrado', menú contextual, Chats grupales, Administración de roles Admin/Miembro)"
+    ]
+  }
+}
