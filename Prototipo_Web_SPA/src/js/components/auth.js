@@ -131,6 +131,12 @@ export function renderLanding(containerId = 'view-landing') {
 }
 
 export function renderLogin(containerId = 'view-login') {
+  // Evitar bucle: Si ya está logueado, redirigir directo al mapa
+  if (Store.state.user && Store.state.user.isAuthenticated) {
+    window.location.hash = '#/mapa';
+    return;
+  }
+
   const container = document.getElementById(containerId);
   if (!container) return;
 
@@ -226,6 +232,12 @@ export function renderLogin(containerId = 'view-login') {
 }
 
 export function renderRegister(containerId = 'view-registro') {
+  // Evitar bucle: Si ya está logueado, redirigir directo al mapa
+  if (Store.state.user && Store.state.user.isAuthenticated) {
+    window.location.hash = '#/mapa';
+    return;
+  }
+
   const container = document.getElementById(containerId);
   if (!container) return;
 
@@ -387,10 +399,13 @@ export function renderRegister(containerId = 'view-registro') {
   document.getElementById('form-register').addEventListener('submit', (e) => {
     e.preventDefault();
     if (validateName() && validateEmail() && validatePhone() && validatePassword()) {
+      const userName = nameInput.value.trim();
       Store.register({
-        name: nameInput.value.trim(),
+        name: userName,
         email: emailInput.value.trim(),
-        phone: phoneInput.value.trim()
+        phone: phoneInput.value.trim(),
+        // Generamos un avatar único dinámico basado en el nombre del usuario
+        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(userName)}`
       });
       window.location.hash = '#/mapa';
     } else {
@@ -410,7 +425,6 @@ export function renderRegister(containerId = 'view-registro') {
     });
   }
 }
-
 
 export function renderPasswordRecovery(containerId = 'view-recuperar-password') {
   const container = document.getElementById(containerId);

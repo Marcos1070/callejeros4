@@ -126,9 +126,20 @@ class ReactiveStore {
   }
 
   logout() {
-    this.state.user.isAuthenticated = false;
-    this.state.user.isGuest = false;
-    StorageManager.set(STORAGE_KEYS.USER, this.state.user);
+    // Limpiamos los datos del usuario en el storage por completo
+    StorageManager.remove(STORAGE_KEYS.USER);
+    
+    // Reseteamos el estado del usuario a valores limpios/vacíos
+    this.state.user = {
+      id: '',
+      name: '',
+      email: '',
+      phone: '',
+      isAuthenticated: false,
+      isGuest: false,
+      darkMode: this.state.user.darkMode // Mantenemos la preferencia de modo oscuro si la tenía
+    };
+
     this.notify('user:updated', this.state.user);
     this.notify('toast', {
       type: 'info',
@@ -157,7 +168,7 @@ class ReactiveStore {
     return true;
   }
 
-  updateProfile(profileData) {
+updateProfile(profileData) {
     this.state.user = {
       ...this.state.user,
       ...profileData
@@ -167,7 +178,7 @@ class ReactiveStore {
     this.notify('toast', {
       type: 'success',
       title: 'Perfil Actualizado',
-      message: 'Se han guardado tus cambios. Hemos enviado un mail de confirmación a tu correo.'
+      message: 'Se han guardado tus cambios correctamente en la red de Río Cuarto.'
     });
   }
 

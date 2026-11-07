@@ -257,7 +257,6 @@ export function renderProfile(containerId = 'view-perfil') {
         Store.notify('toast', { type: 'error', title: 'Error', message: 'La imagen está dañada o no es compatible.' });
       };
       img.onload = () => {
-        // Recorte cuadrado centrado y reducción a 200x200 para no saturar el localStorage
         const size = 200;
         const canvas = document.createElement('canvas');
         canvas.width = size;
@@ -280,7 +279,9 @@ export function renderProfile(containerId = 'view-perfil') {
     const name = document.getElementById('edit-name').value.trim();
     const phone = document.getElementById('edit-phone').value.trim();
     const email = document.getElementById('edit-email').value.trim();
+    
     Store.updateProfile({ name, phone, email });
+    renderProfile(containerId); // Refresca de inmediato para mostrar los datos guardados
   });
 
   document.getElementById('toggle-2fa').addEventListener('click', () => {
