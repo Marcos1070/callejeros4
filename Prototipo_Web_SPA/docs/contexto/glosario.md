@@ -51,3 +51,10 @@ Barrios y sectores urbanos integrados en el mapa interactivo y selector de ubica
 - **Hogar de Tránsito:** Alojamiento provisorio brindado por un vecino o voluntario mientras el animal recibe tratamiento veterinario o espera ser adoptado definitivamente.
 - **Panel de Control Comunitario:** Módulo administrativo para que gestores de grupos y protectoras supervisen métricas urbanas, alertas resueltas y evalúen solicitudes de adopción.
 
+## 5. Términos de Interfaz y Accesibilidad
+- **`.force-text-white`:** Clase de `style.css` que fija el texto en `#FFFFFF` con `!important` en botones de acento (rojo, verde, sky-700, negro) para que ningún override del modo oscuro lo altere.
+- **`openSuccessModal()`:** Función de `modal.js` que abre el modal accesible de confirmación de éxito (role=dialog, focus trap, Esc, foco devuelto, `onClose`) tras completar un formulario.
+- **Salto suave (`data-scroll-to`):** Enlace interno de una pantalla que hace `scrollIntoView` animado hacia una sección y mueve el foco allí, sin cambiar el hash de la ruta.
+- **Respaldo global de estados:** Reglas de `style.css` que dan Hover y Active a controles que no declaran `hover:`/`active:` (junto con el foco visible y el Disabled globales completan los 5 estados).
+- **Carcasa semántica:** `index.html` con skip-link, `<header>`, `<main>` y `<footer>`; el contenido de cada vista lo inyecta su módulo de `src/js/components/`.
+

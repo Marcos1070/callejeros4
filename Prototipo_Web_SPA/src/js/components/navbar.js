@@ -4,6 +4,7 @@
  */
 
 import { Store } from '../store.js';
+import { esc } from '../utils.js';
 
 // La suscripción al Store se registra UNA sola vez (si se hiciera en cada render,
 // cada notificación agregaría un listener nuevo y entraría en un bucle infinito).
@@ -19,22 +20,22 @@ export function renderNavbar(containerId = 'navbar-container') {
   container.innerHTML = `
     <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm transition-colors">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between h-20">
+        <div class="flex items-center justify-between h-20 gap-2">
           
           <!-- Logo Oficial Callejeros Río IV -->
           <a href="#/" class="
-            group flex items-center gap-3 rounded-full p-1.5
+            group flex items-center gap-2 sm:gap-3 rounded-full p-1 sm:p-1.5
             focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2
             active:scale-95 transition-transform
           " aria-label="Callejeros Río IV - Ir al inicio">
-            <div class="w-12 h-12 rounded-full bg-[#E0A800] flex items-center justify-center text-2xl shadow-md group-hover:scale-105 transition-transform">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#E0A800] flex items-center justify-center text-xl sm:text-2xl shadow-md group-hover:scale-105 transition-transform">
               🐾
             </div>
             <div>
-              <span class="block font-black text-xl text-black tracking-tight leading-none group-hover:text-[#E0A800] transition-colors">
+              <span class="block font-black text-lg sm:text-xl text-black tracking-tight leading-none group-hover:text-[#7A5900] transition-colors">
                 Callejeros
               </span>
-              <span class="block text-xs font-bold text-[#4A4A4A] tracking-wider uppercase">
+              <span class="hidden sm:block text-xs font-bold text-[#4A4A4A] tracking-wider uppercase">
                 Río Cuarto · Comunidad
               </span>
             </div>
@@ -57,11 +58,31 @@ export function renderNavbar(containerId = 'navbar-container') {
           </nav>
 
           <!-- Acciones Derecha: Botón Reportar Rojo + Perfil -->
-          <div class="flex items-center gap-3">
+          <div class="flex items-center gap-2 sm:gap-3">
             
+            <!-- Conmutador de tema Claro / Oscuro (persistido en Store -> localStorage) -->
+            <button id="theme-toggle" type="button" class="
+              inline-flex items-center justify-center w-11 h-11 rounded-full text-xl
+              /* 1. Default */
+              bg-[#EBEBEB] text-black
+              /* 2. Hover */
+              hover:bg-gray-300
+              /* 3. Active */
+              active:scale-90 active:bg-gray-400
+              /* 4. Focus-Visible */
+              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2
+              /* 5. Disabled */
+              disabled:opacity-50 disabled:cursor-not-allowed
+              transition-all duration-150
+            " aria-pressed="${user.darkMode ? 'true' : 'false'}"
+              aria-label="${user.darkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}"
+              title="${user.darkMode ? 'Modo claro' : 'Modo oscuro'}">
+              <span aria-hidden="true">${user.darkMode ? '☀️' : '🌙'}</span>
+            </button>
+
             <!-- Botón de Emergencia Rojo de Alto Impacto -->
             <a href="#/reportar" class="
-              inline-flex items-center gap-2 px-5 py-2.5 rounded-full font-black text-sm tracking-wide text-white
+              inline-flex items-center gap-2 px-3 sm:px-5 py-2.5 rounded-full font-black text-sm tracking-wide text-white force-text-white
               /* 1. Default */
               bg-[#C50000] shadow-md shadow-rose-900/20
               /* 2. Hover */
@@ -74,7 +95,7 @@ export function renderNavbar(containerId = 'navbar-container') {
               disabled:opacity-50 disabled:cursor-not-allowed
               transition-all duration-150
             " aria-label="Crear reporte de mascota perdida o herida">
-              <span>Reportar</span>
+              <span class="hidden sm:inline">Reportar</span>
               <span class="text-base" aria-hidden="true">🚨</span>
             </a>
 
@@ -83,10 +104,17 @@ export function renderNavbar(containerId = 'navbar-container') {
               <a href="#/perfil" class="
                 flex items-center gap-2 p-1.5 rounded-full hover:bg-[#EBEBEB] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black
                 transition-colors active:scale-95
-              " aria-label="Ir a mi perfil y configuración">
-                <img src="${user.avatar}" alt="${user.name}" class="w-10 h-10 rounded-full object-cover border-2 border-[#E0A800]" />
+              " aria-label="Ir a mi perfil y configuración (${esc(user.name)})">
+                <img src="${esc(user.avatar)}" alt="" class="w-10 h-10 rounded-full object-cover border-2 border-[#E0A800]" />
               </a>
+              <button id="btn-nav-logout" type="button" class="
+                hidden md:inline-flex px-4 py-2 rounded-full text-sm font-bold bg-[#EBEBEB] text-[#C50000] hover:bg-red-50
+                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black transition-all
+              ">
+                Cerrar Sesión
+              </button>
             ` : `
+              ${user.isGuest ? `<span class="hidden lg:inline-flex px-3 py-1 rounded-full text-xs font-bold bg-[#98D7FF] text-black">Modo Invitado</span>` : ''}
               <a href="#/login" class="
                 hidden sm:inline-flex px-4 py-2 rounded-full text-sm font-bold bg-[#EBEBEB] text-black hover:bg-gray-300
                 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black transition-all
@@ -125,12 +153,35 @@ export function renderNavbar(containerId = 'navbar-container') {
         <a href="#/chats" class="mobile-nav-item block px-4 py-3 rounded-xl font-bold text-black hover:bg-[#EBEBEB]">
           💬 Mensajes y Grupos
         </a>
-        <a href="#/perfil" class="mobile-nav-item block px-4 py-3 rounded-xl font-bold text-black hover:bg-[#EBEBEB]">
-          👤 Perfil y Configuración
-        </a>
+        ${user.isAuthenticated ? `
+          <a href="#/perfil" class="mobile-nav-item block px-4 py-3 rounded-xl font-bold text-black hover:bg-[#EBEBEB]">
+            👤 Perfil y Configuración
+          </a>
+          <button id="btn-mobile-logout" type="button" class="block w-full text-left px-4 py-3 rounded-xl font-bold text-[#C50000] hover:bg-red-50">
+            🚪 Cerrar Sesión
+          </button>
+        ` : `
+          <a href="#/login" class="mobile-nav-item block px-4 py-3 rounded-xl font-bold text-black hover:bg-[#EBEBEB]">
+            🔑 Iniciar Sesión
+          </a>
+          <a href="#/registro" class="mobile-nav-item block px-4 py-3 rounded-xl font-bold text-black hover:bg-[#EBEBEB]">
+            ✨ Crear Cuenta
+          </a>
+        `}
       </div>
     </header>
   `;
+
+  // Tema: al alternar, el Store notifica y el navbar se re-renderiza; se devuelve el foco
+  // al botón para que la persona que navega con teclado no lo pierda (WCAG 2.4.3).
+  const themeBtn = document.getElementById('theme-toggle');
+  if (themeBtn) {
+    themeBtn.addEventListener('click', () => {
+      Store.toggleDarkMode();
+      const refreshed = document.getElementById('theme-toggle');
+      if (refreshed) refreshed.focus();
+    });
+  }
 
   const mobileBtn = document.getElementById('mobile-menu-btn');
   const mobileNav = document.getElementById('mobile-nav');
@@ -138,7 +189,8 @@ export function renderNavbar(containerId = 'navbar-container') {
   if (mobileBtn && mobileNav) {
     mobileBtn.addEventListener('click', () => {
       const isExpanded = mobileBtn.getAttribute('aria-expanded') === 'true';
-      mobileBtn.setAttribute('aria-expanded', !isExpanded);
+      mobileBtn.setAttribute('aria-expanded', String(!isExpanded));
+      mobileBtn.setAttribute('aria-label', isExpanded ? 'Abrir menú móvil' : 'Cerrar menú móvil');
       mobileNav.classList.toggle('hidden');
     });
 
@@ -147,6 +199,20 @@ export function renderNavbar(containerId = 'navbar-container') {
         mobileBtn.setAttribute('aria-expanded', 'false');
         mobileNav.classList.add('hidden');
       });
+    });
+  }
+
+  const doLogout = () => {
+    Store.logout();
+    window.location.hash = '#/';
+  };
+  const navLogout = document.getElementById('btn-nav-logout');
+  if (navLogout) navLogout.addEventListener('click', doLogout);
+  const mobileLogout = document.getElementById('btn-mobile-logout');
+  if (mobileLogout) {
+    mobileLogout.addEventListener('click', () => {
+      if (mobileNav) mobileNav.classList.add('hidden');
+      doLogout();
     });
   }
 

@@ -16,7 +16,7 @@ class ToastManager {
     if (!this.container) {
       this.container = document.createElement('div');
       this.container.id = 'toast-container';
-      this.container.className = 'fixed bottom-5 right-5 z-50 flex flex-col gap-3 max-w-sm w-full px-4 pointer-events-none';
+      this.container.className = 'fixed bottom-5 right-5 z-[70] flex flex-col gap-3 max-w-sm w-full px-4 pointer-events-none';
       this.container.setAttribute('aria-live', 'polite');
       this.container.setAttribute('role', 'status');
       document.body.appendChild(this.container);
@@ -40,11 +40,11 @@ class ToastManager {
     toast.innerHTML = `
       <div class="text-xl flex-shrink-0 mt-0.5">${this.getTypeIcon(type)}</div>
       <div class="flex-1 min-w-0">
-        <h4 class="font-bold text-sm tracking-wide text-black">${title}</h4>
-        <p class="text-xs mt-0.5 text-[#4A4A4A] leading-relaxed">${message}</p>
+        <h4 data-toast-title class="font-bold text-sm tracking-wide text-black"></h4>
+        <p data-toast-message class="text-xs mt-0.5 text-[#4A4A4A] leading-relaxed"></p>
       </div>
       <button type="button" aria-label="Cerrar notificación" class="
-        flex-shrink-0 text-gray-500 hover:text-black p-1 rounded-lg
+        flex-shrink-0 text-gray-600 hover:text-black p-1 rounded-lg
         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black
         transition-colors
       ">
@@ -53,6 +53,10 @@ class ToastManager {
         </svg>
       </button>
     `;
+
+    // Texto plano: título y mensaje pueden incluir datos del usuario (nombres, títulos...)
+    toast.querySelector('[data-toast-title]').textContent = title ?? '';
+    toast.querySelector('[data-toast-message]').textContent = message ?? '';
 
     const closeBtn = toast.querySelector('button');
     let timer = null;

@@ -41,6 +41,10 @@ Ninguna tarea se considera finalizada sin cumplir estrictamente con los siguient
 - **Verificación Visual de Estados:** Validación empírica de los 5 estados de cada componente intervenido.
 - **Navegación Completa por Teclado:** Soporte pleno para navegación mediante `Tab`, `Shift+Tab`, `Enter`, `Espacio` y `Esc`, garantizando la ausencia de trampas de foco (*focus traps*).
 - **Salud de Consola:** Cero errores de Javascript o advertencias no controladas en tiempo de ejecución.
+- **Texto blanco garantizado:** todo botón o enlace de acento con texto blanco lleva la clase `.force-text-white` (ver `convenciones.md` §6).
+- **Un `<h1>` por vista y etiquetas en todos los campos:** el `placeholder` no es una etiqueta.
+- **Confirmación de éxito en modal accesible:** todo formulario que se completa abre `openSuccessModal()`.
+- **Sin desborde horizontal a 360 px** en ninguna vista.
 
 ---
 

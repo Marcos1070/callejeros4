@@ -21,3 +21,8 @@ Toda pantalla o componente desarrollado debe cumplir rigurosamente con los sigui
 - [ ] **Navegación por Teclado y Focus Trap:** Navegación fluida con `Tab` / `Shift+Tab`, cierre accesible con tecla `Escape` y retorno de foco al elemento de origen en todos los modales.
 - [ ] **Validaciones Defensivas:** Manejo de errores en formularios (contraseñas seguras, teléfonos, nombres solo letras, error *"Dirección no encontrada"* y *"Contacto no encontrado"*).
 - [ ] **Salud de Consola:** Cero excepciones no controladas en tiempo de ejecución.
+- [ ] **Un `<h1>` por vista y etiquetas en todos los campos:** comprobado en cada vista tocada.
+- [ ] **Sin desborde horizontal a 360 px:** comprobado en las vistas tocadas, con y sin sesión.
+- [ ] **Confirmación de éxito en modal accesible** en todo formulario nuevo (`openSuccessModal()`).
+- [ ] **Botones de acento con texto blanco** llevan `.force-text-white`.
+

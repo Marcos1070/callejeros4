@@ -23,6 +23,7 @@
 - **Tipografía:** Inter (Black, Bold, Medium) con legibilidad óptima WCAG AA.
 - **Cartografía:** Leaflet.js con OpenStreetMap centrado en Río Cuarto (`-33.123, -64.349`) para pines geolocalizados y trazado de rutas.
 - **Persistencia:** `LocalStorage` del navegador administrado con el wrapper defensivo `StorageManager`.
+- **Archivos entregables (ADR-017):** `index.html` (carcasa semántica: skip-link, `<header>`, `<main>` con una `<section>` por vista, `<footer>`), `style.css` (tokens, modo oscuro, `.force-text-white`, respaldos de estados) y `app.js` (arranque: tema, router, modales, persistencia). La lógica se divide en módulos ES en `src/js/` (router, store, utils, componentes) para no mezclar responsabilidades.
 
 ---
 

@@ -45,6 +45,9 @@ class CallejerosApp {
       this.handleViewRender(viewId, params);
     });
 
+    // Cierra cualquier modal abierto al cambiar de pantalla (no queda "colgado" sobre otra vista)
+    Store.subscribe('view:changed', () => Modal.close());
+
     // 4. Iniciar Router
     Router.init();
 

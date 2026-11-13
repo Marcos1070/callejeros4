@@ -3,6 +3,8 @@
  * Cumple con DoD de accesibilidad WCAG AA
  */
 
+import { escapeHTML } from '../utils.js';
+
 class AccessibleModalManager {
   constructor() {
     this.modalRoot = null;
@@ -29,14 +31,16 @@ class AccessibleModalManager {
    * @param {string} options.title - Título accesible
    * @param {string} options.content - HTML del cuerpo
    * @param {Function} [options.onMount] - Callback al montar el modal
+   * @param {Function} [options.onClose] - Callback al cerrarse (botón, X, Esc o backdrop)
    * @param {HTMLElement} [options.trigger] - Elemento disparador para devolver foco
    */
-  open({ title, content, onMount = null, trigger = null }) {
+  open({ title, content, onMount = null, onClose = null, trigger = null }) {
+    this.onCloseCallback = onClose;
     this.triggerElement = trigger || document.activeElement;
 
     this.modalRoot.innerHTML = `
-      <div id="modal-backdrop" class="fixed inset-0 modal-backdrop transition-opacity"></div>
-      <div class="fixed inset-0 z-10 overflow-y-auto flex items-center justify-center p-4">
+      <div id="modal-backdrop" class="fixed inset-0 z-[60] modal-backdrop transition-opacity"></div>
+      <div class="fixed inset-0 z-[61] overflow-y-auto flex items-center justify-center p-4">
         <div id="modal-panel" class="
           w-full max-w-lg bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-gray-200
           pointer-events-auto transform transition-all duration-200 scale-95 opacity-0
@@ -44,10 +48,10 @@ class AccessibleModalManager {
           
           <div class="flex items-center justify-between pb-4 border-b border-gray-100 mb-4">
             <h3 id="modal-title" class="font-black text-xl text-black">
-              ${title}
+              ${escapeHTML(title)}
             </h3>
             <button id="modal-close-btn" type="button" class="
-              p-2 rounded-full text-gray-400 hover:text-black hover:bg-gray-100 active:bg-gray-200
+              p-2 rounded-full text-gray-600 hover:text-black hover:bg-gray-100 active:bg-gray-200
               focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black
               transition-colors
             " aria-label="Cerrar ventana modal">
@@ -80,9 +84,10 @@ class AccessibleModalManager {
     document.body.style.overflow = 'hidden';
     document.addEventListener('keydown', this.handleKeyDown);
 
+    const panelEl = this.activeModal;
     requestAnimationFrame(() => {
-      this.activeModal.classList.remove('scale-95', 'opacity-0');
-      this.activeModal.classList.add('scale-100', 'opacity-100');
+      panelEl.classList.remove('scale-95', 'opacity-0');
+      panelEl.classList.add('scale-100', 'opacity-100');
     });
 
     if (onMount) {
@@ -91,6 +96,8 @@ class AccessibleModalManager {
 
     // Foco en el botón de cierre inicial o primer elemento
     setTimeout(() => {
+      // Si el modal ya se cerró (p. ej. por cambiar de pantalla) no hay nada a qué darle foco
+      if (!this.activeModal || this.activeModal !== panelEl) return;
       const firstInput = this.activeModal.querySelector('input, button:not(#modal-close-btn)');
       if (firstInput) {
         firstInput.focus();
@@ -103,8 +110,8 @@ class AccessibleModalManager {
   close() {
     if (!this.modalRoot || !this.activeModal) return;
 
-    this.activeModal.classList.remove('scale-100', 'opacity-100');
-    this.activeModal.classList.add('scale-95', 'opacity-0');
+    this.activeModal.classList.remove('scale-100', 'opacity-100', 'pointer-events-auto');
+    this.activeModal.classList.add('scale-95', 'opacity-0', 'pointer-events-none');
 
     this.modalRoot.classList.remove('pointer-events-auto', 'opacity-100');
     this.modalRoot.classList.add('pointer-events-none', 'opacity-0');
@@ -118,6 +125,14 @@ class AccessibleModalManager {
     }
 
     this.activeModal = null;
+
+    // Vaciar el contenido ya oculto: si no, sus botones/inputs seguían accesibles con la tecla Tab
+    setTimeout(() => {
+      if (!this.activeModal && this.modalRoot) this.modalRoot.innerHTML = '';
+    }, 220);
+    const cb = this.onCloseCallback;
+    this.onCloseCallback = null;
+    if (typeof cb === 'function') cb();
   }
 
   handleKeyDown(e) {
@@ -150,3 +165,32 @@ class AccessibleModalManager {
 }
 
 export const Modal = new AccessibleModalManager();
+
+
+/**
+ * Modal de confirmación de éxito reutilizable (rúbrica EFI: formulario -> modal accesible).
+ * Hereda de Modal: role="dialog", aria-modal, focus trap, Esc, foco devuelto al disparador.
+ * `onClose` se ejecuta al cerrar por cualquier vía (botón, X, Esc o clic fuera).
+ */
+export function openSuccessModal({ title, message, icon = '✅', actionLabel = 'Continuar', trigger = null, onClose = null }) {
+  Modal.open({
+    title,
+    trigger,
+    content: `
+      <div class="space-y-5 text-center">
+        <div class="text-5xl" aria-hidden="true">${escapeHTML(icon)}</div>
+        <p class="text-sm text-[#4A4A4A] leading-relaxed">${escapeHTML(message)}</p>
+        <button id="btn-success-continue" type="button" class="
+          w-full py-3 px-6 rounded-full font-black text-sm bg-[#E0A800] text-black
+          hover:bg-[#c99700] active:bg-[#b38600] active:scale-95
+          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2
+          disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150
+        ">${escapeHTML(actionLabel)}</button>
+      </div>
+    `,
+    onMount: (panel) => {
+      panel.querySelector('#btn-success-continue').addEventListener('click', () => Modal.close());
+    },
+    onClose
+  });
+}

@@ -5,9 +5,11 @@
 
 import { Store } from '../store.js';
 import { Modal } from './modal.js';
+import { esc } from '../utils.js';
 
 let activeTab = 'chats'; // chats | groups | contacts
 let contactSearchQuery = '';
+let dropdownCloserAttached = false; // un único listener global (antes se acumulaba uno por cada render)
 
 export function renderChats(containerId = 'view-chats') {
   const container = document.getElementById(containerId);
@@ -16,7 +18,11 @@ export function renderChats(containerId = 'view-chats') {
   const chats = Store.state.chats;
   const contacts = Store.state.contacts;
   const user = Store.state.user;
+  // El autor se calcula con el usuario actual (no con un flag guardado): si cambia la cuenta, cambian los lados
+  const isMine = (msg) => msg.senderId === user.id;
   const activeChat = chats.find(c => c.id === Store.state.activeChatId) || chats[0];
+  const iAmAdmin = Store.isGroupAdmin(activeChat);
+  if (activeChat) Store.markChatRead(activeChat.id); // abrir la charla la marca como leída
 
   // Filtrado de contactos para el buscador
   const filteredContacts = contacts.filter(c =>
@@ -26,7 +32,7 @@ export function renderChats(containerId = 'view-chats') {
 
   container.innerHTML = `
     <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6" aria-labelledby="chat-main-heading">
-      <h2 id="chat-main-heading" class="sr-only">Centro de Mensajería y Coordinación Comunitaria</h2>
+      <h1 id="chat-main-heading" class="sr-only">Centro de Mensajería y Coordinación Comunitaria</h1>
 
       <div class="bg-white rounded-3xl shadow-xl border border-gray-200 overflow-hidden grid grid-cols-1 md:grid-cols-12 min-h-[640px]">
         
@@ -47,20 +53,21 @@ export function renderChats(containerId = 'view-chats') {
               <input
                 type="search"
                 id="contact-search-input"
-                value="${contactSearchQuery}"
+                aria-label="Buscar contacto o voluntario"
+                value="${esc(contactSearchQuery)}"
                 placeholder="Buscar contacto o voluntario..."
-                class="w-full pl-9 pr-4 py-2.5 rounded-full border border-gray-300 text-xs focus-visible:ring-2 focus-visible:ring-[#E0A800] bg-white"
+                class="w-full pl-9 pr-4 py-2.5 rounded-full border border-gray-300 text-xs focus-visible:ring-2 focus-visible:ring-black bg-white"
               />
-              <span class="absolute left-3 top-2.5 text-gray-400 text-sm">🔍</span>
+              <span class="absolute left-3 top-2.5 text-gray-600 text-sm">🔍</span>
             </div>
 
             <!-- Pestañas de Vista: Chats vs Contactos -->
             <div class="flex items-center gap-1 bg-[#EBEBEB] p-1 rounded-full text-xs font-bold">
               <button type="button" id="tab-all-chats" class="flex-1 py-1.5 rounded-full transition-all ${activeTab === 'chats' ? 'bg-white text-black shadow-sm' : 'text-[#4A4A4A]'}">
-                Conversaciones (${chats.length})
+                Conversaciones (${esc(chats.length)})
               </button>
               <button type="button" id="tab-contacts" class="flex-1 py-1.5 rounded-full transition-all ${activeTab === 'contacts' ? 'bg-white text-black shadow-sm' : 'text-[#4A4A4A]'}">
-                Contactos (${contacts.length})
+                Contactos (${esc(contacts.length)})
               </button>
             </div>
           </div>
@@ -74,23 +81,23 @@ export function renderChats(containerId = 'view-chats') {
                 const isGroup = chat.type === 'group';
 
                 return `
-                  <button type="button" data-select-chat="${chat.id}" class="
+                  <button type="button" data-select-chat="${esc(chat.id)}" class="
                     w-full p-4 text-left flex items-start gap-3 transition-colors
-                    ${isActive ? 'bg-[#98D7FF]/25 border-l-4 border-[#0284C7]' : 'hover:bg-white'}
+                    ${isActive ? 'bg-[#98D7FF]/25 border-l-4 border-[#0369A1]' : 'hover:bg-white'}
                   ">
-                    <div class="w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center text-xl font-bold ${isGroup ? 'bg-[#E0A800] text-black' : 'bg-sky-100 text-[#0284C7]'} shadow-sm">
-                      ${isGroup ? (chat.avatar || '🐾') : (chat.title.charAt(0))}
+                    <div class="w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center text-xl font-bold ${isGroup ? 'bg-[#E0A800] text-black' : 'bg-sky-100 text-[#0369A1]'} shadow-sm">
+                      ${esc(isGroup ? (chat.avatar || '🐾') : (chat.title || '?').charAt(0))}
                     </div>
                     <div class="flex-1 min-w-0">
                       <div class="flex items-center justify-between mb-1">
-                        <h4 class="font-bold text-sm text-black truncate">${chat.title}</h4>
-                        <span class="text-[10px] text-gray-400 font-semibold">${chat.timestamp}</span>
+                        <h4 class="font-bold text-sm text-black truncate">${esc(chat.title)}</h4>
+                        <span class="text-[10px] text-gray-600 font-semibold">${esc(chat.timestamp)}</span>
                       </div>
-                      <p class="text-xs text-[#4A4A4A] truncate">${chat.lastMessage}</p>
+                      <p class="text-xs text-[#4A4A4A] truncate">${esc(chat.lastMessage)}</p>
                     </div>
                     ${chat.unreadCount > 0 ? `
                       <span class="w-5 h-5 rounded-full bg-[#E0A800] text-black text-[10px] font-black flex items-center justify-center flex-shrink-0">
-                        ${chat.unreadCount}
+                        ${esc(chat.unreadCount)}
                       </span>
                     ` : ''}
                   </button>
@@ -105,20 +112,20 @@ export function renderChats(containerId = 'view-chats') {
                   </div>
                   <h4 class="font-black text-sm text-black">Contacto no encontrado</h4>
                   <p class="text-xs text-[#4A4A4A] leading-relaxed max-w-xs mx-auto">
-                    No encontramos ningún voluntario con el nombre "<strong>${contactSearchQuery}</strong>" en Río Cuarto.
+                    No encontramos ningún voluntario con el nombre "<strong>${esc(contactSearchQuery)}</strong>" en Río Cuarto.
                   </p>
                 </div>
               ` : `
                 ${filteredContacts.map(c => `
                   <div class="p-4 flex items-center justify-between hover:bg-white transition-colors">
                     <div class="flex items-center gap-3">
-                      <img src="${c.avatar}" alt="${c.name}" class="w-10 h-10 rounded-full object-cover border border-gray-300" />
+                      <img src="${esc(c.avatar)}" alt="${esc(c.name)}" class="w-10 h-10 rounded-full object-cover border border-gray-300" />
                       <div>
-                        <span class="font-bold text-sm text-black block">${c.name}</span>
-                        <span class="text-xs text-[#4A4A4A]">${c.role} · ${c.phone}</span>
+                        <span class="font-bold text-sm text-black block">${esc(c.name)}</span>
+                        <span class="text-xs text-[#4A4A4A]">${esc(c.role)} · ${esc(c.phone)}</span>
                       </div>
                     </div>
-                    <button type="button" data-start-contact-chat="${c.id}" class="px-3 py-1.5 rounded-full text-xs font-bold bg-[#98D7FF] text-black hover:bg-sky-300">
+                    <button type="button" data-start-contact-chat="${esc(c.id)}" class="px-3 py-1.5 rounded-full text-xs font-bold bg-[#98D7FF] text-black hover:bg-sky-300">
                       Chatear
                     </button>
                   </div>
@@ -136,16 +143,16 @@ export function renderChats(containerId = 'view-chats') {
             <!-- Cabecera del Chat Activo con Menú Contextual (3 puntos) -->
             <div class="p-4 border-b border-gray-200 flex items-center justify-between bg-white">
               <div class="flex items-center gap-3 min-w-0">
-                <div class="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center text-lg font-bold ${activeChat.type === 'group' ? 'bg-[#E0A800] text-black' : 'bg-sky-100 text-[#0284C7]'}">
-                  ${activeChat.type === 'group' ? (activeChat.avatar || '🐾') : activeChat.title.charAt(0)}
+                <div class="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center text-lg font-bold ${activeChat.type === 'group' ? 'bg-[#E0A800] text-black' : 'bg-sky-100 text-[#0369A1]'}">
+                  ${esc(activeChat.type === 'group' ? (activeChat.avatar || '🐾') : (activeChat.title || '?').charAt(0))}
                 </div>
                 <div class="min-w-0">
                   <h3 class="font-black text-base text-black truncate flex items-center gap-2">
-                    <span>${activeChat.title}</span>
+                    <span>${esc(activeChat.title)}</span>
                     ${activeChat.type === 'group' ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-200">Grupo</span>' : ''}
                   </h3>
                   <span class="text-xs text-[#4A4A4A] block truncate">
-                    ${activeChat.type === 'group' ? `${activeChat.members.length} integrantes · ${activeChat.description}` : 'En línea · Río Cuarto'}
+                    ${activeChat.type === 'group' ? `${esc(activeChat.members.length)} integrantes · ${esc(activeChat.description)}` : 'En línea · Río Cuarto'}
                   </span>
                 </div>
               </div>
@@ -162,7 +169,7 @@ export function renderChats(containerId = 'view-chats') {
                 <div id="chat-options-dropdown" class="hidden absolute right-0 mt-2 w-56 rounded-2xl bg-white border border-gray-200 shadow-xl py-2 z-30 text-xs font-semibold text-[#4A4A4A]">
                   ${activeChat.type === 'group' ? `
                     <button type="button" id="opt-view-members" class="w-full text-left px-4 py-2 hover:bg-[#EBEBEB] text-black flex items-center gap-2">
-                      👥 Ver Integrantes (${activeChat.members.length})
+                      👥 Ver Integrantes (${esc(activeChat.members.length)})
                     </button>
                     <button type="button" id="opt-report-group" class="w-full text-left px-4 py-2 hover:bg-[#EBEBEB] text-black flex items-center gap-2">
                       🚩 Reportar Grupo
@@ -192,19 +199,19 @@ export function renderChats(containerId = 'view-chats') {
             <!-- Cuerpo de Mensajes con Burbujas (Celeste #98D7FF / Blanco) -->
             <div id="messages-scroll-area" class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3 bg-[#EBEBEB]/30">
               ${activeChat.messages.map(msg => `
-                <div class="flex flex-col ${msg.isMe ? 'items-end' : 'items-start'}">
-                  ${(activeChat.type === 'group' && !msg.isMe && msg.senderName) ? `
-                    <span class="text-[10px] text-gray-500 font-bold ml-2 mb-0.5">${msg.senderName}</span>
+                <div class="flex flex-col ${isMine(msg) ? 'items-end' : 'items-start'}">
+                  ${(activeChat.type === 'group' && !isMine(msg) && msg.senderName) ? `
+                    <span class="text-[10px] text-gray-600 font-bold ml-2 mb-0.5">${esc(msg.senderName)}</span>
                   ` : ''}
                   <div class="
                     max-w-xs sm:max-w-md p-3.5 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-sm
-                    ${msg.isMe
+                    ${isMine(msg)
                       ? 'bg-[#98D7FF] text-black rounded-tr-none'
                       : 'bg-white text-black border border-gray-200 rounded-tl-none'
                     }
                   ">
-                    <p>${msg.text}</p>
-                    <span class="text-[10px] text-[#4A4A4A] block text-right mt-1 font-semibold">${msg.time}</span>
+                    <p>${esc(msg.text)}</p>
+                    <span class="text-[10px] text-[#4A4A4A] block text-right mt-1 font-semibold">${esc(msg.time)}</span>
                   </div>
                 </div>
               `).join('')}
@@ -215,9 +222,10 @@ export function renderChats(containerId = 'view-chats') {
               <input
                 type="text"
                 id="message-input-text"
+                aria-label="Escribir mensaje"
                 required
                 placeholder="Escribe un mensaje de coordinación..."
-                class="flex-1 px-4 py-3 rounded-full border border-gray-300 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E0A800]"
+                class="flex-1 px-4 py-3 rounded-full border border-gray-300 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
               />
               <button type="submit" class="
                 px-6 py-3 rounded-full font-black text-sm text-black uppercase tracking-wider
@@ -227,7 +235,7 @@ export function renderChats(containerId = 'view-chats') {
               </button>
             </form>
           ` : `
-            <div class="h-full flex flex-col items-center justify-center p-8 text-center text-gray-400">
+            <div class="h-full flex flex-col items-center justify-center p-8 text-center text-gray-600">
               <span class="text-5xl block mb-2">💬</span>
               <p class="font-bold text-black">Selecciona una conversación para chatear</p>
             </div>
@@ -262,6 +270,12 @@ export function renderChats(containerId = 'view-chats') {
       contactSearchQuery = e.target.value.trim();
       if (activeTab !== 'contacts') activeTab = 'contacts';
       renderChats(containerId);
+      // El render recrea el input: se devuelve el foco y el cursor para poder seguir escribiendo
+      const again = document.getElementById('contact-search-input');
+      if (again) {
+        again.focus();
+        again.setSelectionRange(again.value.length, again.value.length);
+      }
     });
   }
 
@@ -279,7 +293,7 @@ export function renderChats(containerId = 'view-chats') {
       const contactId = btn.getAttribute('data-start-contact-chat');
       const contact = contacts.find(c => c.id === contactId);
       if (contact) {
-        Store.createOrOpenRescueChat(contact.name);
+        Store.createOrOpenRescueChat(contact.name, `Hola ${contact.name}, ¿cómo estás?`, contact.id);
       }
     };
   });
@@ -293,6 +307,7 @@ export function renderChats(containerId = 'view-chats') {
       if (txt.trim()) {
         Store.sendMessage(activeChat.id, txt);
         renderChats(containerId);
+        document.getElementById('message-input-text')?.focus();
       }
     };
   }
@@ -305,7 +320,12 @@ export function renderChats(containerId = 'view-chats') {
       e.stopPropagation();
       dropdown.classList.toggle('hidden');
     };
-    document.addEventListener('click', () => dropdown.classList.add('hidden'));
+  }
+  if (!dropdownCloserAttached) {
+    dropdownCloserAttached = true;
+    document.addEventListener('click', () => {
+      document.getElementById('chat-options-dropdown')?.classList.add('hidden');
+    });
   }
 
   // Acciones de Menú Contextual (Reportar, Bloquear, Salir de Grupo, Ver Integrantes)
@@ -330,8 +350,8 @@ export function renderChats(containerId = 'view-chats') {
                 <input type="radio" name="report_reason" value="Estafa o Venta Ilegal" /> Cobro de dinero indebido / Estafa
               </label>
             </div>
-            <textarea id="report-details" rows="2" placeholder="Detalles adicionales (opcional)..." class="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus-visible:ring-2 focus-visible:ring-[#E0A800]"></textarea>
-            <button type="submit" class="w-full py-3 px-6 rounded-full font-bold text-xs bg-[#C50000] text-white hover:bg-red-800">
+            <textarea id="report-details" rows="2" placeholder="Detalles adicionales (opcional)..." class="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus-visible:ring-2 focus-visible:ring-black"></textarea>
+            <button type="submit" class="w-full py-3 px-6 rounded-full font-bold text-xs bg-[#C50000] text-white force-text-white hover:bg-red-800">
               Enviar Reporte a Moderación
             </button>
           </form>
@@ -347,7 +367,7 @@ export function renderChats(containerId = 'view-chats') {
       });
     };
     if (reportUserBtn) reportUserBtn.onclick = () => openReportModal(activeChat.title);
-    if (reportGroupBtn) reportGroupBtn.onclick = () => openReportModal(`Grupo "${activeChat.title}"`);
+    if (reportGroupBtn) reportGroupBtn.onclick = () => openReportModal(`Grupo "${esc(activeChat.title)}"`);
 
     // 2. Salir de Grupo (con transferencia automática de Admin)
     const leaveGroupBtn = document.getElementById('opt-leave-group');
@@ -358,12 +378,12 @@ export function renderChats(containerId = 'view-chats') {
           content: `
             <div class="space-y-4">
               <p class="text-xs text-[#4A4A4A]">
-                ¿Seguro que deseas salir de <strong>${activeChat.title}</strong>?
-                ${activeChat.isAdmin ? '<br/><span class="text-[#E0A800] font-bold">Nota: Al ser Administrador, el rol se transferirá automáticamente al siguiente integrante.</span>' : ''}
+                ¿Seguro que deseas salir de <strong>${esc(activeChat.title)}</strong>?
+                ${iAmAdmin ? '<br/><span class="text-[#7A5900] font-bold">Nota: Al ser Administrador, el rol se transferirá automáticamente al siguiente integrante.</span>' : ''}
               </p>
               <div class="flex items-center justify-end gap-2">
                 <button id="cancel-leave-btn" class="px-4 py-2 rounded-full text-xs font-bold bg-gray-100 hover:bg-gray-200">Cancelar</button>
-                <button id="confirm-leave-btn" class="px-5 py-2 rounded-full text-xs font-bold text-white bg-[#C50000] hover:bg-red-800">Salir del Grupo</button>
+                <button id="confirm-leave-btn" class="px-5 py-2 rounded-full text-xs font-bold text-white force-text-white bg-[#C50000] hover:bg-red-800">Salir del Grupo</button>
               </div>
             </div>
           `,
@@ -383,7 +403,7 @@ export function renderChats(containerId = 'view-chats') {
     const viewMembersBtn = document.getElementById('opt-view-members');
     if (viewMembersBtn) {
       viewMembersBtn.onclick = () => {
-        const isAdmin = activeChat.isAdmin;
+        const isAdmin = iAmAdmin;
         Modal.open({
           title: `Integrantes de ${activeChat.title}`,
           content: `
@@ -392,20 +412,20 @@ export function renderChats(containerId = 'view-chats') {
                 ${activeChat.members.map(m => `
                   <div class="py-3 flex items-center justify-between text-xs">
                     <div>
-                      <span class="font-bold text-black block">${m.name}</span>
-                      <span class="text-[10px] text-gray-400 font-semibold uppercase">${m.role === 'admin' ? '⭐ Administrador' : 'Miembro Regular'}</span>
+                      <span class="font-bold text-black block">${esc(m.name)}</span>
+                      <span class="text-[10px] text-gray-600 font-semibold uppercase">${m.role === 'admin' ? '⭐ Administrador' : 'Miembro Regular'}</span>
                     </div>
                     <div class="flex items-center gap-1.5">
                       ${(isAdmin && m.role !== 'admin') ? `
-                        <button type="button" data-promote-admin="${m.id}" class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-black hover:bg-[#E0A800]">
+                        <button type="button" data-promote-admin="${esc(m.id)}" class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-black hover:bg-[#E0A800]">
                           Hacer Admin
                         </button>
-                        <button type="button" data-kick-member="${m.id}" class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-100 text-[#C50000] hover:bg-red-200">
+                        <button type="button" data-kick-member="${esc(m.id)}" class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-100 text-[#C50000] hover:bg-red-200">
                           Expulsar
                         </button>
                       ` : ''}
                       ${m.id !== user.id ? `
-                        <button type="button" data-dm-member="${m.name}" class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800 hover:bg-sky-200">
+                        <button type="button" data-dm-member="${esc(m.name)}" class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800 hover:bg-sky-200">
                           Mensaje
                         </button>
                       ` : ''}
@@ -433,7 +453,9 @@ export function renderChats(containerId = 'view-chats') {
             panel.querySelectorAll('[data-dm-member]').forEach(b => {
               b.onclick = () => {
                 Modal.close();
-                Store.createOrOpenRescueChat(b.getAttribute('data-dm-member'));
+                const memberName = b.getAttribute('data-dm-member');
+                const member = activeChat.members.find(m => m.name === memberName);
+                Store.createOrOpenRescueChat(memberName, `Hola ${memberName}, te escribo desde el grupo "${activeChat.title}".`, Store.resolveContactId(member?.id));
               };
             });
           }
@@ -441,10 +463,28 @@ export function renderChats(containerId = 'view-chats') {
       };
     }
 
-    // 4. Bloquear y Eliminar Contacto
+    // 4. Silenciar, Bloquear y Eliminar Contacto
+    const contactOf = () => Store.getContact(activeChat.recipientId);
+
+    const muteBtn = document.getElementById('opt-mute-chat');
+    if (muteBtn) {
+      muteBtn.onclick = () => {
+        if (!contactOf()) {
+          Store.toast('info', 'Sin contacto asociado', 'Esta conversación no pertenece a un contacto guardado.');
+          return;
+        }
+        Store.toggleMuteContact(activeChat.recipientId);
+        renderChats(containerId);
+      };
+    }
+
     const blockBtn = document.getElementById('opt-block-user');
     if (blockBtn) {
       blockBtn.onclick = () => {
+        if (!contactOf()) {
+          Store.toast('info', 'Sin contacto asociado', 'Esta conversación no pertenece a un contacto guardado.');
+          return;
+        }
         Store.toggleBlockContact(activeChat.recipientId);
         renderChats(containerId);
       };
@@ -453,10 +493,29 @@ export function renderChats(containerId = 'view-chats') {
     const delContactBtn = document.getElementById('opt-delete-chat');
     if (delContactBtn) {
       delContactBtn.onclick = () => {
-        if (confirm(`¿Eliminar la conversación con ${activeChat.title}?`)) {
-          Store.deleteContact(activeChat.recipientId);
-          renderChats(containerId);
-        }
+        Modal.open({
+          title: 'Eliminar conversación',
+          trigger: delContactBtn,
+          content: `
+            <div class="space-y-4">
+              <p class="text-xs text-[#4A4A4A]">¿Eliminar la conversación con <strong>${esc(activeChat.title)}</strong>? ${contactOf() ? 'También se quitará el contacto.' : ''}</p>
+              <div class="flex items-center justify-end gap-2">
+                <button id="btn-cancel-del-chat" type="button" class="px-4 py-2 rounded-full text-xs font-bold bg-gray-100 hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black">Cancelar</button>
+                <button id="btn-confirm-del-chat" type="button" class="px-5 py-2 rounded-full text-xs font-bold text-white force-text-white bg-[#C50000] hover:bg-red-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black">Eliminar</button>
+              </div>
+            </div>
+          `,
+          onMount: (panel) => {
+            panel.querySelector('#btn-cancel-del-chat').onclick = () => Modal.close();
+            panel.querySelector('#btn-confirm-del-chat').onclick = () => {
+              Modal.close();
+              // Elimina SOLO a quien corresponde (antes las salas nuevas apuntaban siempre a Sofía)
+              if (contactOf()) Store.deleteContact(activeChat.recipientId);
+              else Store.deleteChat(activeChat.id);
+              renderChats(containerId);
+            };
+          }
+        });
       };
     }
   }
@@ -471,12 +530,12 @@ export function renderChats(containerId = 'view-chats') {
           <form id="form-new-group" class="space-y-4">
             <div class="space-y-1">
               <label class="block text-xs font-bold text-[#4A4A4A]">Nombre del Grupo *</label>
-              <input type="text" id="group-name-input" required placeholder="Ej. Rescatistas Alberdi y Centro" class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus-visible:ring-2 focus-visible:ring-[#E0A800]" />
+              <input type="text" id="group-name-input" required placeholder="Ej. Rescatistas Alberdi y Centro" class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus-visible:ring-2 focus-visible:ring-black" />
             </div>
 
             <div class="space-y-1">
               <label class="block text-xs font-bold text-[#4A4A4A]">Descripción del Grupo</label>
-              <textarea id="group-desc-input" rows="2" placeholder="Objetivo y zona de coordinación comunitaria..." class="w-full px-4 py-2 rounded-xl border border-gray-300 text-xs focus-visible:ring-2 focus-visible:ring-[#E0A800]"></textarea>
+              <textarea id="group-desc-input" rows="2" placeholder="Objetivo y zona de coordinación comunitaria..." class="w-full px-4 py-2 rounded-xl border border-gray-300 text-xs focus-visible:ring-2 focus-visible:ring-black"></textarea>
             </div>
 
             <!-- Buscador y Selección Múltiple de Integrantes -->
@@ -485,8 +544,8 @@ export function renderChats(containerId = 'view-chats') {
               <div class="divide-y divide-gray-100 max-h-40 overflow-y-auto border border-gray-200 rounded-xl p-2 bg-[#EBEBEB]/40">
                 ${contacts.map(c => `
                   <label class="flex items-center justify-between p-2 hover:bg-white rounded-lg cursor-pointer text-xs">
-                    <span class="font-bold text-black">${c.name} (${c.role})</span>
-                    <input type="checkbox" name="group_members" value="${c.id}" class="w-4 h-4 text-[#E0A800] rounded" />
+                    <span class="font-bold text-black">${esc(c.name)} (${esc(c.role)})</span>
+                    <input type="checkbox" name="group_members" value="${esc(c.id)}" class="w-4 h-4 text-[#E0A800] rounded" />
                   </label>
                 `).join('')}
               </div>

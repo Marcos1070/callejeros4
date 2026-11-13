@@ -30,7 +30,7 @@ export const INITIAL_POIS = [
     name: 'Veterinaria Del Sol',
     type: 'veterinaria',
     typeLabel: 'Veterinaria & Urgencias 24h',
-    badgeColor: 'bg-sky-600',
+    badgeColor: 'bg-sky-700',
     status: 'open', // open | closed
     statusText: 'Abierto Ahora (Guardia)',
     address: 'Av. Marcelo T. de Alvear 1240, Banda Norte',
@@ -44,7 +44,7 @@ export const INITIAL_POIS = [
     name: 'Clínica Veterinaria San Roque',
     type: 'veterinaria',
     typeLabel: 'Clínica Veterinaria',
-    badgeColor: 'bg-sky-600',
+    badgeColor: 'bg-sky-700',
     status: 'open',
     statusText: 'Abierto hasta las 20:00 hs',
     address: 'Constitución 840, Centro',
@@ -97,9 +97,9 @@ export const INITIAL_ALERTS = [
     image: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=600&q=80',
     publisher: {
       isAnonymous: false,
-      id: 'user-sofia',
-      name: 'Sofía Gómez',
-      phone: '0358 154-897612',
+      id: 'user-marcos',
+      name: 'Marcos Rescatista',
+      phone: '0358 154-998877',
       verified: true
     },
     status: 'active' // active | rescued
@@ -189,6 +189,7 @@ export const INITIAL_ADOPTIONS = [
       phone: '0358 154-897612',
       role: 'Voluntaria Hogar de Tránsito'
     },
+    publishedAt: '2026-11-03T10:00:00',
     status: 'available'
   },
   {
@@ -215,6 +216,7 @@ export const INITIAL_ADOPTIONS = [
       phone: '0358 154-123789',
       role: 'Rescatista Independiente'
     },
+    publishedAt: '2026-11-04T16:30:00',
     status: 'available'
   },
   {
@@ -241,6 +243,7 @@ export const INITIAL_ADOPTIONS = [
       phone: '0358 465-9900',
       role: 'Organización Protectora'
     },
+    publishedAt: '2026-11-05T12:15:00',
     status: 'available'
   },
   {
@@ -266,16 +269,39 @@ export const INITIAL_ADOPTIONS = [
       phone: '0358 154-897612',
       role: 'Voluntaria'
     },
+    publishedAt: '2026-11-06T09:45:00',
     status: 'available'
   }
 ];
 
+/** Coordenadas aproximadas por barrio (tomadas de los puntos ya cargados en el mapa). */
+export const BARRIO_COORDS = {
+  'Banda Norte': [-33.1155, -64.3472],
+  'Alberdi': [-33.1280, -64.3380],
+  'Centro': [-33.1250, -64.3490],
+  'Macrocentro': [-33.1210, -64.3540],
+  'Castelli': [-33.1380, -64.3600]
+};
+
+/** Calles y referencias principales de Río Cuarto para validar la ubicación de un reporte. */
+export const CALLES_RIO_CUARTO = [
+  'Alvear', 'Marcelo T. de Alvear', 'Sobremonte', 'Constitución', 'San Martín', 'Colón', 'Belgrano',
+  'Rivadavia', 'Sarmiento', 'Roca', 'Santa Fe', 'Deán Funes', 'Lavalle', 'Fotheringham',
+  'Buenos Aires', 'Paunero', 'Cabrera', 'Italia', 'Mitre', 'Moreno', '25 de Mayo', 'España',
+  'Ituzaingó', 'Jujuy', 'Yrigoyen', 'Pellegrini', 'Libertad', 'Corrientes', 'Córdoba', 'Río Negro',
+  'Puente Colgante', 'Plaza Roca', 'Plaza Mitre', 'Costanera', 'Ruta 8', 'Ruta 36', 'Circunvalación'
+];
+
+/**
+ * Perfil base de ejemplo (autor de las publicaciones de muestra). Ya NO es una cuenta con la que se pueda
+ * ingresar: las cuentas se crean desde cero en "Registrate".
+ */
 export const INITIAL_USER = {
   id: 'user-marcos',
   name: 'Marcos Rescatista',
   email: 'marcos@callejerosriocuarto.org',
   phone: '0358 154-998877',
-  isAuthenticated: true,
+  isAuthenticated: false,
   avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
   twoFactorEnabled: false,
   biometricsEnabled: true,

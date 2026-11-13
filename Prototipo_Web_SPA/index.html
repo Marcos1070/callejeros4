@@ -16,6 +16,27 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
+  <script>window.APP_BUILD = '2026-11-12-eficheck-v6';</script>
+
+  <!-- Tema claro/oscuro: se aplica ANTES de pintar para evitar el parpadeo blanco y para que no dependa
+       de que carguen los módulos JS. Misma lógica que Store: elección guardada > perfil heredado > sistema. -->
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('callejeros_theme') || sessionStorage.getItem('callejeros_theme');
+        var dark;
+        if (saved) {
+          dark = saved === 'dark';
+        } else {
+          var user = JSON.parse(localStorage.getItem('callejeros_user') || 'null');
+          dark = (user && user.darkMode === true) ||
+                 (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        }
+        if (dark) document.documentElement.classList.add('dark');
+      } catch (e) { /* sin acceso a storage: queda en claro */ }
+    })();
+  </script>
+
   <!-- Tailwind CSS CDN con Tokens de Diseño Oficiales -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -52,7 +73,7 @@
   </script>
 
   <!-- Estilos complementarios y animaciones -->
-  <link rel="stylesheet" href="./src/styles.css" />
+  <link rel="stylesheet" href="./style.css?v=2026-11-12-eficheck-v6" />
 </head>
 
 <body class="min-h-full flex flex-col bg-[#EBEBEB] text-black font-sans antialiased selection:bg-[#E0A800] selection:text-black">
@@ -109,7 +130,7 @@
 
   <!-- Contenedores de Modales y Notificaciones Accesibles -->
   <div id="modal-root"></div>
-  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-3 max-w-sm w-full px-4 pointer-events-none" aria-live="polite" role="status"></div>
+  <div id="toast-container" class="fixed bottom-5 right-5 z-[70] flex flex-col gap-3 max-w-sm w-full px-4 pointer-events-none" aria-live="polite" role="status"></div>
 
   <!-- Footer Comunitario -->
   <footer class="bg-white border-t border-gray-200 py-10 text-xs text-[#4A4A4A] mt-auto" role="contentinfo">
@@ -129,10 +150,10 @@
         <div>
           <h4 class="font-black text-black uppercase tracking-wider mb-3">Secciones</h4>
           <ul class="space-y-2 font-semibold">
-            <li><a href="#/mapa" class="hover:text-[#E0A800] focus-visible:underline focus-visible:outline-none transition-colors">Mapa de Veterinarias y POIs</a></li>
-            <li><a href="#/alertas" class="hover:text-[#E0A800] focus-visible:underline focus-visible:outline-none transition-colors">Alertas de Emergencia</a></li>
-            <li><a href="#/adopciones" class="hover:text-[#E0A800] focus-visible:underline focus-visible:outline-none transition-colors">Adopciones Responsables</a></li>
-            <li><a href="#/chats" class="hover:text-[#E0A800] focus-visible:underline focus-visible:outline-none transition-colors">Salas de Coordinación</a></li>
+            <li><a href="#/mapa" class="hover:text-[#7A5900] hover:underline focus-visible:underline focus-visible:outline-none transition-colors">Mapa de Veterinarias y POIs</a></li>
+            <li><a href="#/alertas" class="hover:text-[#7A5900] hover:underline focus-visible:underline focus-visible:outline-none transition-colors">Alertas de Emergencia</a></li>
+            <li><a href="#/adopciones" class="hover:text-[#7A5900] hover:underline focus-visible:underline focus-visible:outline-none transition-colors">Adopciones Responsables</a></li>
+            <li><a href="#/chats" class="hover:text-[#7A5900] hover:underline focus-visible:underline focus-visible:outline-none transition-colors">Salas de Coordinación</a></li>
           </ul>
         </div>
 
@@ -161,12 +182,13 @@
 
       <div class="pt-6 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
         <p>© 2026 Callejeros Río IV. Proyecto EFI desarrollado bajo estándares Gentle-AI y WCAG AA.</p>
+        <p class="text-xs text-[#4A4A4A]" id="build-stamp">Versión 2026-11-12-eficheck-v6</p>
         <p class="font-semibold text-gray-500">Río Cuarto, Provincia de Córdoba, Argentina</p>
       </div>
     </div>
   </footer>
 
   <!-- Script Modular Bootstrap -->
-  <script type="module" src="./src/app.js"></script>
+  <script type="module" src="./app.js?v=2026-11-12-eficheck-v6"></script>
 </body>
 </html>

@@ -5,7 +5,7 @@
   "operating_system": {
     "framework": "Gentle-AI",
     "version": "2.0.0",
-    "last_updated": "2026-11-06T17:44:00-03:00",
+    "last_updated": "2026-11-12T20:00:00-03:00",
     "design_tokens": {
       "surface": "#EBEBEB",
       "primary_amber": "#E0A800",
@@ -18,11 +18,66 @@
       "radii": "pill / rounded-full (botones) y 12-16px (tarjetas)"
     },
     "modules": [
-      "Autenticación, Registro y Cuentas (Login, Registro con validaciones, Recuperación en 3 pasos, Perfil, Seguridad con 2FA/Biometría/Sesiones, Configuración)",
-      "Mapa Interactivo de Río Cuarto (Leaflet.js, pines semánticos alertas y POIs, tarjetas de info con Abierto/Cerrado, simulación de ruta y modal de llegada)",
-      "Módulo de Reportes y Alertas de Emergencia (Feed con filtros, Reportar sin cuenta, Publicar reporte con fotos y validación de dirección, Perfil del publicador, Mis reportes, Sala de rescate)",
-      "Módulo de Adopciones Responsables (Catálogo con filtros Perros/Gatos, Carrusel modal de fotos, Formulario con chips de edad/sexo/tipo, Mis publicaciones)",
-      "Módulo de Mensajería, Chats y Grupos (Chat 1 a 1, buscador con 'Contacto no encontrado', menú contextual, Chats grupales, Administración de roles Admin/Miembro)"
-    ]
+      "Autenticación, Registro y Cuentas (Login con clave verificada por hash, Registro con repetición de contraseña y modal de éxito, Recuperación en 3 pasos, Perfil, Seguridad con 2FA/Biometría/Sesiones, Baja de cuenta con clave, datos por usuario)",
+      "Mapa Interactivo de Río Cuarto (Leaflet.js, pines semánticos alertas activas y POIs, ruta por calles OSRM con respaldo, modal de llegada)",
+      "Módulo de Reportes y Alertas de Emergencia (Feed con filtros, Reportar sin cuenta, Wizard con fotos reales y validación de dirección con barrios y calles, Edición de reportes propios, Ficha de difusión, modal de éxito)",
+      "Módulo de Adopciones Responsables (Catálogo con filtros por tamaño/edad/género/zona/modalidad, Carrusel modal, Publicar y editar fichas, Marcar adoptada, Postulación, Panel de solicitudes en el Perfil, modal de éxito)",
+      "Módulo de Mensajería, Chats y Grupos (Chat 1 a 1 asociado al contacto real, buscador, Silenciar y Bloquear con efecto, Grupos con roles Admin/Miembro, chats separados por usuario)",
+      "Tema Claro/Oscuro persistido (conmutador en el header, overrides en style.css) y respaldo global de los 5 estados"
+    ],
+    "engram": {
+      "tool": "mem_save",
+      "entries": [
+        {
+          "topic_key": "arquitectura/entregables",
+          "type": "decision",
+          "title": "Entregables con los nombres de la consigna",
+          "content": "index.html, style.css y app.js en la raíz de Prototipo_Web_SPA/; módulos ES en src/js/. Al cambiar CSS/JS de arranque subir ?v= en index.html. (ADR-017)",
+          "saved_at": "2026-11-12"
+        },
+        {
+          "topic_key": "accesibilidad/estructura",
+          "type": "convention",
+          "title": "Un h1 por vista y etiquetas en todos los campos",
+          "content": "Cada vista tiene exactamente un h1; todo input/select/textarea visible lleva label for o aria-label; el placeholder no sustituye la etiqueta. (ADR-017)",
+          "saved_at": "2026-11-12"
+        },
+        {
+          "topic_key": "accesibilidad/contraste",
+          "type": "convention",
+          "title": ".force-text-white en botones de acento",
+          "content": "Botones/enlaces con texto blanco sobre rojo #C50000, verde #0C832A, sky-700 o negro llevan .force-text-white (color #FFF !important). Ámbar usa texto negro. Medido >= 4.5:1 en claro y oscuro. (ADR-018)",
+          "saved_at": "2026-11-12"
+        },
+        {
+          "topic_key": "accesibilidad/estados",
+          "type": "decision",
+          "title": "Respaldo global de hover y active",
+          "content": "style.css cubre hover/active solo para controles sin clases hover:/active: propias (selector :where + :not([class*=...])); foco visible y disabled tienen respaldo global. Verificado con estados reales. (ADR-018)",
+          "saved_at": "2026-11-12"
+        },
+        {
+          "topic_key": "ux/formularios",
+          "type": "convention",
+          "title": "Confirmación de éxito en modal accesible",
+          "content": "openSuccessModal() de modal.js se usa en registro, reporte, adopción (publicar/editar) y postulación. Cierra con botón, X, Esc o clic fuera y continúa al destino en onClose. (ADR-018)",
+          "saved_at": "2026-11-12"
+        },
+        {
+          "topic_key": "seguridad/cuentas",
+          "type": "decision",
+          "title": "Credenciales hasheadas locales y sin cuenta demo",
+          "content": "Contraseñas solo como hash SHA-256 con sal (sin backend, no equivale a autenticación real); chats/contactos/sesiones por usuario; no hay cuenta de demostración. (ADR-015 y ADR-016)",
+          "saved_at": "2026-11-12"
+        },
+        {
+          "topic_key": "responsive/header",
+          "type": "learning",
+          "title": "Desborde horizontal a 360 px",
+          "content": "El header con sesión iniciada desbordaba: Reportar queda como ícono bajo sm, el logo oculta el subtítulo; contenedores flex con items-start necesitan max-w-full. Verificar 360/375/390/414 px. (ADR-018)",
+          "saved_at": "2026-11-12"
+        }
+      ]
+    }
   }
 }

@@ -5,6 +5,11 @@
 
 import { Store } from './store.js';
 
+// Rutas que requieren sesión iniciada (el resto es público, incluido el modo invitado)
+const PROTECTED_ROUTES = new Set(['#/perfil', '#/chats', '#/publicar-adopcion']);
+// Pantallas de acceso: con sesión iniciada no tiene sentido mostrarlas
+const GUEST_ONLY_ROUTES = new Set(['#/login', '#/registro']);
+
 class HashRouter {
   constructor() {
     this.routes = new Map();
@@ -58,6 +63,23 @@ class HashRouter {
     if (!matched) {
       console.warn(`[Router] Ruta no encontrada: "${cleanHash}". Redirigiendo a "#/"`);
       window.location.hash = '#/';
+      return;
+    }
+
+    // Guard: rutas privadas sin sesión => ir al login y volver luego a la ruta pedida
+    if (PROTECTED_ROUTES.has(this.currentRoute) && !Store.state.user.isAuthenticated) {
+      Store.setReturnTo(cleanHash);
+      Store.notify('toast', {
+        type: 'warning',
+        title: 'Iniciá sesión',
+        message: 'Necesitás una cuenta para acceder a esta sección.'
+      });
+      window.location.hash = '#/login';
+      return;
+    }
+
+    if (GUEST_ONLY_ROUTES.has(this.currentRoute) && Store.state.user.isAuthenticated) {
+      window.location.hash = '#/perfil';
       return;
     }
 
